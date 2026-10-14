@@ -42,7 +42,7 @@ const getDefaultRedirectUri = (): string => {
 export const DERIV_CONFIG: DerivConfig = {
   appId: getEnvVar('DERIV_APP_ID', '33E1sj7WNaMsjg5MAxPyS'),
   redirectUri: getDefaultRedirectUri(),
-  appName: getEnvVar('DERIV_APP_NAME', 'G-squad'),
+  appName: getEnvVar('DERIV_APP_NAME', 'G-Squad'),
   showAppName: getEnvVar('DERIV_SHOW_APP_NAME', 'true') === 'true',
   referralLink: getEnvVar('DERIV_REFERRAL_LINK', 'https://t.deriv.link?t=AJAQ5SJZLES4'),
   oauthScopes: getEnvVar('DERIV_OAUTH_SCOPES', 'trade,account_manage'),

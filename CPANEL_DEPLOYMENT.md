@@ -55,7 +55,7 @@ This guide explains how to deploy **G-Squad** to Truehost cPanel shared hosting 
 |---|---|
 | `NODE_ENV` | `production` |
 | `NEXT_PUBLIC_DERIV_APP_ID` | `33E1sj7WNaMsjg5MAxPyS` |
-| `NEXT_PUBLIC_DERIV_APP_NAME` | `G-squad` |
+| `NEXT_PUBLIC_DERIV_APP_NAME` | `G-Squad` |
 | `NEXT_PUBLIC_DERIV_ENV` | `production` |
 | `NEXT_PUBLIC_DERIV_OAUTH_SCOPES` | `trade,account_manage` |
 | `NEXT_PUBLIC_DERIV_REDIRECT_URI` | `https://g-squad.buzz` |
