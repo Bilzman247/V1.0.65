@@ -12,23 +12,13 @@ export interface DerivConfig {
   env: 'production' | 'staging';
 }
 
-// Read env variables safely in both Vite (import.meta.env) and Node (process.env)
+// Read env variables safely in Node / Next.js (process.env)
 const getEnvVar = (key: string, defaultValue: string = ''): string => {
-  try {
-    if (typeof import.meta !== 'undefined' && import.meta.env) {
-      if (import.meta.env[key]) return import.meta.env[key];
-      if (import.meta.env[`VITE_${key}`]) return import.meta.env[`VITE_${key}`];
-      if (import.meta.env[`NEXT_PUBLIC_${key}`]) return import.meta.env[`NEXT_PUBLIC_${key}`];
-    }
-  } catch (e) {
-    // ignore
-  }
-
   try {
     if (typeof process !== 'undefined' && process.env) {
       if (process.env[key]) return process.env[key]!;
-      if (process.env[`VITE_${key}`]) return process.env[`VITE_${key}`]!;
       if (process.env[`NEXT_PUBLIC_${key}`]) return process.env[`NEXT_PUBLIC_${key}`]!;
+      if (process.env[`VITE_${key}`]) return process.env[`VITE_${key}`]!;
     }
   } catch (e) {
     // ignore

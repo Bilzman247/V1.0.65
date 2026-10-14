@@ -36,8 +36,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
-      <body className="min-h-screen bg-slate-900 flex justify-center text-slate-900 antialiased selection:bg-blue-500 selection:text-white">
+    <html lang="en" suppressHydrationWarning>
+      <body className="min-h-screen bg-slate-900 flex justify-center text-slate-900 antialiased selection:bg-blue-500 selection:text-white" suppressHydrationWarning>
         <div className="w-full max-w-md min-h-screen bg-slate-50 relative flex flex-col shadow-2xl overflow-x-hidden">
           {children}
         </div>
