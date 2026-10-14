@@ -5,11 +5,12 @@
   "type": "module",
   "scripts": {
     "dev": "next dev -p 3000 -H 0.0.0.0",
-    "build": "next build",
+    "build": "NODE_ENV=production next build && npm run build:server",
+    "build:server": "esbuild server.ts --bundle --platform=node --format=esm --packages=external --outfile=server.js",
     "preview": "next start --port 3000 --hostname 0.0.0.0",
-    "clean": "rm -rf .next dist",
+    "clean": "rm -rf .next dist server.js",
     "lint": "tsc --noEmit",
-    "start": "tsx server.ts",
+    "start": "node server.js",
     "start:standalone": "next start --port 3000 --hostname 0.0.0.0"
   },
   "dependencies": {
@@ -33,5 +34,9 @@
     "esbuild": "^0.25.0",
     "tailwindcss": "^4.3.3",
     "typescript": "^5.7.3"
+  },
+  "optionalDependencies": {
+    "@next/swc-linux-x64-gnu": "15.2.0",
+    "@next/swc-linux-x64-musl": "15.2.0"
   }
 }

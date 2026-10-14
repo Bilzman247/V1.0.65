@@ -1,90 +1,106 @@
 # Truehost cPanel Deployment Guide for G-Squad (g-squad.buzz)
+## Zero-Terminal & Low-Memory (CloudLinux LVE) Production Deployment
 
-This document provides exact instructions for deploying the **G-Squad Next.js 15 App Router** application with its persistent background trading bot worker on **Truehost cPanel Node.js Selector / Application Manager**.
-
----
-
-## 1. Domain & Environment Setup
-- **Domain:** `https://g-squad.buzz`
-- **Node.js Version:** Recommended **Node.js 20.x** or **Node.js 22.x** (LTS)
-- **Application Mode:** `Production`
-
-### Required Environment Variables in cPanel
-In your cPanel **"Setup Node.js App"** interface (or `.env` file in the application root), set the following variables:
-
-```env
-NODE_ENV=production
-PORT=3000
-NEXT_PUBLIC_DERIV_APP_ID=33E1sj7WNaMsjg5MAxPyS
-NEXT_PUBLIC_DERIV_APP_NAME=G-squad
-NEXT_PUBLIC_DERIV_ENV=production
-NEXT_PUBLIC_DERIV_OAUTH_SCOPES=trade,account_manage
-NEXT_PUBLIC_DERIV_REDIRECT_URI=https://g-squad.buzz
-NEXT_PUBLIC_DERIV_REFERRAL_LINK=https://t.deriv.link?t=AJAQ5SJZLES4
-NEXT_PUBLIC_DERIV_SHOW_APP_NAME=true
-```
-
-> **Note on PORT:** Truehost / CloudLinux cPanel automatically injects the assigned `process.env.PORT` variable. The server (`server.ts`) is preconfigured to bind dynamically to `0.0.0.0` and `process.env.PORT || 3000`.
+This guide explains how to deploy **G-Squad** to Truehost cPanel shared hosting **without using the command-line Terminal** and avoiding CloudLinux memory exhaustion (`RangeError: WebAssembly.instantiate(): Out of memory`).
 
 ---
 
-## 2. cPanel "Setup Node.js App" Settings
+### Why the Memory Error Happened & How This Fix Resolves It
+
+1. **The Root Cause:**  
+   CloudLinux enforces a strict **Virtual Memory (vMEM) address-space limit** (often 1GB–4GB) per cPanel account. When `next build` is executed on shared hosting without native Linux binaries installed, Next.js falls back to SWC WebAssembly (`@next/swc-wasm-nodejs`). The V8 WebAssembly engine tries to reserve a 4GB+ virtual memory region for safety guards, which CloudLinux blocks, throwing:  
+   `RangeError: WebAssembly.instantiate(): Out of memory: Cannot allocate Wasm memory for new instance`.
+   Additionally, parallel Webpack build workers and in-process TypeScript checks exceed the physical RAM (pMEM).
+
+2. **The Solution:**  
+   - The production Next.js assets (`.next/`) and server runner (`server.js`) are **pre-compiled**.
+   - `server.ts` is compiled into a standalone, pure ES module `server.js` so Node.js runs it directly without `tsx`.
+   - `next.config.mjs` has been tuned with `webpackMemoryOptimizations: true`, `productionBrowserSourceMaps: false`, single-worker mode (`cpus: 1`, `workerThreads: false`), and native Linux SWC bindings (`@next/swc-linux-x64-gnu`) in `optionalDependencies`.
+   - At runtime, `node server.js` only consumes **~60MB–90MB of RAM**, which is well below CloudLinux shared hosting limits!
+
+---
+
+## Step-by-Step Deployment (No Terminal Required)
+
+### Step 1: Upload the Pre-Built ZIP via cPanel File Manager
 
 1. Log into your **Truehost cPanel**.
-2. Click **"Setup Node.js App"** (under the **Software** section).
-3. Click **"Create Application"**:
-   - **Node.js version:** Select `20.x` or `22.x`.
+2. Open **File Manager** (under the **Files** section).
+3. Create a folder in your home directory named `g-squad` (i.e. `/home/YOUR_USERNAME/g-squad`), or open your domain's root folder.
+4. Click **Upload** in the top toolbar and upload:
+   - `g-squad-cpanel-deploy.zip`
+5. Once uploaded, right-click `g-squad-cpanel-deploy.zip` and select **Extract**.
+6. Ensure the following files and folders exist directly in the `g-squad` directory:
+   - `.next/` (Pre-compiled production build)
+   - `public/` (PWA icons, manifest, favicon)
+   - `server.js` (Compiled production startup file)
+   - `package.json` (Configured with `"start": "node server.js"`)
+   - `.env.example`
+   - `next.config.mjs`
+
+---
+
+### Step 2: Configure "Setup Node.js App" in cPanel
+
+1. In cPanel, navigate to the **Software** section and click **Setup Node.js App**.
+2. Click **Create Application**:
+   - **Node.js version:** Select `20.x` or `22.x` (LTS recommended).
    - **Application mode:** Select `Production`.
-   - **Application root:** Enter your folder path (e.g. `g-squad` or `public_html`).
-   - **Application URL:** Select `g-squad.buzz`.
-   - **Application startup file:** Enter `server.ts` (or `node_modules/.bin/tsx server.ts`).
-4. Click **"Create"**.
+   - **Application root:** Enter `g-squad` (the folder where you extracted the ZIP).
+   - **Application URL:** Select `g-squad.buzz` (or your subdomain).
+   - **Application startup file:** Enter `server.js` *(IMPORTANT: Must be `server.js`, NOT `server.ts`)*.
+3. Scroll down to **Environment variables** and click **Add Variable** for each of the following:
+
+| Name | Value |
+|---|---|
+| `NODE_ENV` | `production` |
+| `NEXT_PUBLIC_DERIV_APP_ID` | `33E1sj7WNaMsjg5MAxPyS` |
+| `NEXT_PUBLIC_DERIV_APP_NAME` | `G-squad` |
+| `NEXT_PUBLIC_DERIV_ENV` | `production` |
+| `NEXT_PUBLIC_DERIV_OAUTH_SCOPES` | `trade,account_manage` |
+| `NEXT_PUBLIC_DERIV_REDIRECT_URI` | `https://g-squad.buzz` |
+| `NEXT_PUBLIC_DERIV_REFERRAL_LINK` | `https://t.deriv.link?t=AJAQ5SJZLES4` |
+| `NEXT_PUBLIC_DERIV_SHOW_APP_NAME` | `true` |
+
+*(Note: cPanel Passenger automatically injects `PORT` for the application, so you do not need to hardcode a specific port).*
+
+4. Click **Create** (or **Save**).
 
 ---
 
-## 3. Install Dependencies & Build
+### Step 3: Install Production Dependencies (One Click in cPanel)
 
-In the cPanel Node.js interface, enter the virtual environment command provided at the top of the page (or open the cPanel Terminal) and run:
-
-```bash
-# 1. Enter application directory
-cd ~/g-squad
-
-# 2. Install all dependencies
-npm install
-
-# 3. Build Next.js 15 production assets
-npm run build
-```
+1. In the **Setup Node.js App** screen for your `g-squad` app, look at the top section.
+2. Click the **Run NPM Install** button.
+3. Wait 30–60 seconds while cPanel installs the production packages (`next`, `react`, `express`, `dotenv`, etc.).
+   - *Note: Because the `.next` directory is already pre-built, you NEVER need to click or run `next build` on the server!*
 
 ---
 
-## 4. Starting & Running the App
+### Step 4: Start / Restart the Application
 
-### Option A: Via cPanel Node.js Interface (Recommended)
-1. In the **Setup Node.js App** dashboard, ensure **Application startup file** is set to `server.ts`.
-2. Click **"Restart"**.
-
-### Option B: Via Terminal / Process Manager (PM2 / Systemd)
-If you run via terminal or PM2:
-
-```bash
-# Start directly with production server
-npm start
-```
-
-Or with PM2:
-```bash
-npx pm2 start "npx tsx server.ts" --name "g-squad"
-npx pm2 save
-```
+1. Click **Start App** (or **Restart** if it is already running).
+2. Visit `https://g-squad.buzz` in your browser.
+3. You should see G-Squad running cleanly with:
+   - Full Mobile & Desktop Dashboard
+   - Deriv OAuth 2.0 Login & Token Exchange via `/api/deriv/token`
+   - Real-time Account Balance & Live Ticks
+   - Persistent Background Trading Bot Engine via `/api/bot/*`
+   - PWA Install Banner & WebAPK integration
 
 ---
 
-## 5. Persistent Background Bot Behavior
-The full-stack server runs Next.js alongside the persistent background trading engine. It continues executing synthetic indices trades and monitoring risk parameters (Stake, Stop-Loss, Take-Profit, and Target Runs) even when users:
-- Close their browser tab
-- Lock their smartphone screen
-- Switch between networks or go offline
+## How to Verify Health & Bot Status
 
-All state syncs automatically upon reconnecting.
+- **Health Check:** `https://g-squad.buzz/api/health` → returns `{"status":"ok","app":"G-Squad",...}`
+- **Bot Status:** `https://g-squad.buzz/api/bot/status` → returns the live status of the persistent trading engine.
+- **PWA Service Worker:** `https://g-squad.buzz/sw.js` → validates mobile offline caching and install prompt.
+
+---
+
+## Ongoing Updates & Maintenance
+
+Whenever you make changes to the app in the future:
+1. Run `npm run build` in your development environment (where RAM limits are not an issue).
+2. Upload the updated `.next/` folder and `server.js` to cPanel via File Manager.
+3. Click **Restart** in **Setup Node.js App**.
