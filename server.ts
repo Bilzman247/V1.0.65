@@ -44,11 +44,15 @@ app.prepare().then(() => {
         return res.status(400).json({ error: 'Missing code or code_verifier' });
       }
 
+      if (!client_id || !redirect_uri) {
+        return res.status(400).json({ error: 'Missing client_id or redirect_uri' });
+      }
+
       const params = new URLSearchParams();
       params.set('grant_type', 'authorization_code');
-      params.set('client_id', client_id || DERIV_APP_ID);
+      params.set('client_id', client_id);
       params.set('code', code);
-      params.set('redirect_uri', redirect_uri || 'https://g-squad.buzz');
+      params.set('redirect_uri', redirect_uri);
       params.set('code_verifier', code_verifier);
 
       const response = await fetch(`${DERIV_OAUTH_URL}/oauth2/token`, {
@@ -60,7 +64,13 @@ app.prepare().then(() => {
       });
 
       const data = await response.json();
-      res.status(response.status).json(data);
+      if (!response.ok) {
+        return res.status(response.status).json({
+          error: data.error_description || data.error || 'Deriv rejected the authorization code.',
+        });
+      }
+
+      res.json(data);
     } catch (error: any) {
       console.error('Error exchanging Deriv token:', error);
       res.status(500).json({ error: error?.message || 'Internal server error exchanging token' });

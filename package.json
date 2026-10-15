@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "next dev -p 3000 -H 0.0.0.0",
-    "build": "NODE_ENV=production next build && npm run build:server",
+    "build": "cross-env NODE_ENV=production NODE_OPTIONS=--max-old-space-size=2048 RAYON_NUM_THREADS=1 next build && npm run build:server",
     "build:server": "esbuild server.ts --bundle --platform=node --format=esm --packages=external --outfile=server.js",
     "preview": "next start --port 3000 --hostname 0.0.0.0",
     "clean": "rm -rf .next dist server.js",
@@ -31,9 +31,13 @@
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
     "autoprefixer": "^10.4.21",
+    "cross-env": "^7.0.3",
     "esbuild": "^0.25.0",
     "tailwindcss": "^4.3.3",
     "typescript": "^5.7.3"
+  },
+  "overrides": {
+    "postcss": "^8.5.30"
   },
   "optionalDependencies": {
     "@next/swc-linux-x64-gnu": "15.2.0",

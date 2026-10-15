@@ -74,8 +74,8 @@ export async function handleOAuthCallback(
 
   // Verify state parameter for security
   const savedState = storage.getPKCEState();
-  if (savedState && returnedState && savedState !== returnedState) {
-    console.warn('OAuth state mismatch: proceeding with verification check.');
+  if (!savedState || !returnedState || savedState !== returnedState) {
+    throw new Error('OAuth state verification failed. Please retry login.');
   }
 
   // Retrieve stored code verifier
@@ -86,54 +86,24 @@ export async function handleOAuthCallback(
 
   const clientId = options.clientId || DERIV_CONFIG.appId;
   const redirectUri = options.redirectUri || storage.getPKCERedirectUri() || DERIV_CONFIG.redirectUri;
-  const endpoints = getEndpoints(options.env || DERIV_CONFIG.env);
 
-  // Exchange authorization code for tokens
-  let tokenData: any = null;
+  const proxyRes = await fetch('/api/deriv/token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      code,
+      code_verifier: codeVerifier,
+      client_id: clientId,
+      redirect_uri: redirectUri,
+    }),
+  });
 
-  // 1. Try Direct Token Exchange
-  try {
-    const params = new URLSearchParams();
-    params.set('grant_type', 'authorization_code');
-    params.set('client_id', clientId);
-    params.set('code', code);
-    params.set('redirect_uri', redirectUri);
-    params.set('code_verifier', codeVerifier);
-
-    const response = await fetch(`${endpoints.oauth}/oauth2/token`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-      body: params.toString(),
-    });
-
-    if (response.ok) {
-      tokenData = await response.json();
-    }
-  } catch (directErr) {
-    console.warn('Direct token exchange failed, trying backend proxy fallback...', directErr);
+  const tokenData = await proxyRes.json().catch(() => null);
+  if (!proxyRes.ok) {
+    throw new Error(tokenData?.error || 'Failed to exchange authorization code for token.');
   }
-
-  // 2. If direct fetch fails (e.g. CORS), fallback to backend proxy
-  if (!tokenData) {
-    const proxyRes = await fetch('/api/deriv/token', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        code,
-        code_verifier: codeVerifier,
-        client_id: clientId,
-        redirect_uri: redirectUri,
-      }),
-    });
-
-    if (!proxyRes.ok) {
-      const errJson = await proxyRes.json().catch(() => ({}));
-      throw new Error(errJson.error || 'Failed to exchange authorization code for token.');
-    }
-
-    tokenData = await proxyRes.json();
+  if (!tokenData?.access_token) {
+    throw new Error('Deriv token response did not include an access token.');
   }
 
   const authInfo: AuthInfo = {
