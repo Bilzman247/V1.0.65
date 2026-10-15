@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
 
-const DERIV_APP_ID = process.env.NEXT_PUBLIC_DERIV_APP_ID || process.env.VITE_DERIV_APP_ID || '33E1sj7WNaMsjg5MAxPyS';
 const DERIV_ENV = process.env.NEXT_PUBLIC_DERIV_ENV || 'production';
 const DERIV_OAUTH_URL = DERIV_ENV === 'staging' ? 'https://staging-oauth.deriv.com' : 'https://oauth.deriv.com';
 
@@ -13,11 +12,15 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Missing code or code_verifier' }, { status: 400 });
     }
 
+    if (!client_id || !redirect_uri) {
+      return NextResponse.json({ error: 'Missing client_id or redirect_uri' }, { status: 400 });
+    }
+
     const params = new URLSearchParams();
     params.set('grant_type', 'authorization_code');
-    params.set('client_id', client_id || DERIV_APP_ID);
+    params.set('client_id', client_id);
     params.set('code', code);
-    params.set('redirect_uri', redirect_uri || 'https://g-squad.buzz');
+    params.set('redirect_uri', redirect_uri);
     params.set('code_verifier', code_verifier);
 
     const response = await fetch(`${DERIV_OAUTH_URL}/oauth2/token`, {
@@ -29,7 +32,14 @@ export async function POST(req: Request) {
     });
 
     const data = await response.json();
-    return NextResponse.json(data, { status: response.status });
+    if (!response.ok) {
+      return NextResponse.json(
+        { error: data.error_description || data.error || 'Deriv rejected the authorization code.' },
+        { status: response.status }
+      );
+    }
+
+    return NextResponse.json(data);
   } catch (error: any) {
     console.error('Error exchanging Deriv token:', error);
     return NextResponse.json(

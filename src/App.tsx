@@ -111,9 +111,16 @@ export default function App() {
       if (typeof window !== 'undefined' && window.location.search) {
         const urlParams = new URLSearchParams(window.location.search);
         const code = urlParams.get('code');
-        if (code) {
+        const oauthError = urlParams.get('error');
+        if (code || oauthError) {
           setIsConnecting(true);
           try {
+            if (oauthError) {
+              throw new Error(
+                `Deriv OAuth Error: ${oauthError} - ${urlParams.get('error_description') || 'Access denied'}`
+              );
+            }
+
             const auth = await handleOAuthCallback(window.location.href);
             setAuthInfo(auth);
             setIsLoggedIn(true);
@@ -148,6 +155,8 @@ export default function App() {
               message: err?.message || 'Could not authenticate with Deriv.',
             });
           } finally {
+            storage.clearPKCE();
+            window.history.replaceState({}, document.title, window.location.pathname);
             setIsConnecting(false);
           }
           return;
@@ -558,7 +567,7 @@ export default function App() {
             isConnected={isConnected}
             activeAccount={activeAccount}
             isLoggedIn={isLoggedIn}
-            onConnectClick={() => setActiveTab('settings')}
+            onConnectClick={handleLogin}
           />
 
           {/* Main Content Area */}

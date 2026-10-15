@@ -12,20 +12,18 @@ export interface DerivConfig {
   env: 'production' | 'staging';
 }
 
-// Read env variables safely in Node / Next.js (process.env)
-const getEnvVar = (key: string, defaultValue: string = ''): string => {
-  try {
-    if (typeof process !== 'undefined' && process.env) {
-      if (process.env[key]) return process.env[key]!;
-      if (process.env[`NEXT_PUBLIC_${key}`]) return process.env[`NEXT_PUBLIC_${key}`]!;
-      if (process.env[`VITE_${key}`]) return process.env[`VITE_${key}`]!;
-    }
-  } catch (e) {
-    // ignore
-  }
-
-  return defaultValue;
+const publicEnv = {
+  DERIV_APP_ID: process.env.NEXT_PUBLIC_DERIV_APP_ID,
+  DERIV_REDIRECT_URI: process.env.NEXT_PUBLIC_DERIV_REDIRECT_URI,
+  DERIV_APP_NAME: process.env.NEXT_PUBLIC_DERIV_APP_NAME,
+  DERIV_SHOW_APP_NAME: process.env.NEXT_PUBLIC_DERIV_SHOW_APP_NAME,
+  DERIV_REFERRAL_LINK: process.env.NEXT_PUBLIC_DERIV_REFERRAL_LINK,
+  DERIV_OAUTH_SCOPES: process.env.NEXT_PUBLIC_DERIV_OAUTH_SCOPES,
+  DERIV_ENV: process.env.NEXT_PUBLIC_DERIV_ENV,
 };
+
+const getEnvVar = (key: keyof typeof publicEnv, defaultValue: string = ''): string =>
+  publicEnv[key] || defaultValue;
 
 // Default redirect URI fallback: use current origin if available, otherwise https://g-squad.buzz
 const getDefaultRedirectUri = (): string => {
