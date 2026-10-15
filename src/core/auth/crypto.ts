@@ -6,15 +6,11 @@
 export function generateRandomString(length: number = 64): string {
   const charset = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~';
   const values = new Uint8Array(length);
-  
-  if (typeof window !== 'undefined' && window.crypto) {
-    window.crypto.getRandomValues(values);
-  } else {
-    // Fallback for Node.js / non-browser environments
-    for (let i = 0; i < length; i++) {
-      values[i] = Math.floor(Math.random() * 256);
-    }
+
+  if (!globalThis.crypto?.getRandomValues) {
+    throw new Error('Secure random number generation is not available in this browser.');
   }
+  globalThis.crypto.getRandomValues(values);
 
   let result = '';
   for (let i = 0; i < length; i++) {
@@ -33,15 +29,11 @@ export async function generateCodeChallenge(verifier: string): Promise<string> {
   const encoder = new TextEncoder();
   const data = encoder.encode(verifier);
 
-  let bytes: Uint8Array;
-  if (typeof window !== 'undefined' && window.crypto && window.crypto.subtle) {
-    const digest = await window.crypto.subtle.digest('SHA-256', data);
-    bytes = new Uint8Array(digest);
-  } else {
-    // Fallback for environments without SubtleCrypto
-    const { createHash } = await import('crypto');
-    bytes = new Uint8Array(createHash('sha256').update(data).digest());
+  if (!globalThis.crypto?.subtle) {
+    throw new Error('Secure SHA-256 is not available in this browser.');
   }
+  const digest = await globalThis.crypto.subtle.digest('SHA-256', data);
+  const bytes = new Uint8Array(digest);
 
   let binary = '';
   for (let i = 0; i < bytes.byteLength; i++) {

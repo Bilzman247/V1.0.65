@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 
 const DERIV_APP_ID = process.env.NEXT_PUBLIC_DERIV_APP_ID || process.env.VITE_DERIV_APP_ID || '33E1sj7WNaMsjg5MAxPyS';
 const DERIV_ENV = process.env.NEXT_PUBLIC_DERIV_ENV || 'production';
-const DERIV_API_URL = DERIV_ENV === 'staging' ? 'https://staging-api.deriv.com' : 'https://api.deriv.com';
+const DERIV_API_URL = DERIV_ENV === 'staging' ? 'https://staging-api.deriv.com' : 'https://api.derivws.com';
 
 export async function GET(req: Request) {
   try {

@@ -426,7 +426,7 @@ export default function App() {
     setIsConnecting(true);
     try {
       await initiateLogin({
-        clientId: DERIV_CONFIG.appId,
+        clientId: DERIV_CONFIG.oauthClientId,
         redirectUri: DERIV_CONFIG.redirectUri,
         scopes: DERIV_CONFIG.oauthScopes,
       });

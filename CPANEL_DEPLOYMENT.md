@@ -55,14 +55,17 @@ This guide explains how to deploy **G-Squad** to Truehost cPanel shared hosting 
 |---|---|
 | `NODE_ENV` | `production` |
 | `NEXT_PUBLIC_DERIV_APP_ID` | `33E1sj7WNaMsjg5MAxPyS` |
+| `NEXT_PUBLIC_DERIV_OAUTH_CLIENT_ID` | Your registered OAuth 2.0 client ID from Deriv |
 | `NEXT_PUBLIC_DERIV_APP_NAME` | `G-Squad` |
 | `NEXT_PUBLIC_DERIV_ENV` | `production` |
 | `NEXT_PUBLIC_DERIV_OAUTH_SCOPES` | `trade,account_manage` |
-| `NEXT_PUBLIC_DERIV_REDIRECT_URI` | `https://g-squad.buzz` |
+| `NEXT_PUBLIC_DERIV_REDIRECT_URI` | Your exact deployed callback URL, e.g. `https://v1-0-65.vercel.app` |
 | `NEXT_PUBLIC_DERIV_REFERRAL_LINK` | `https://t.deriv.link?t=AJAQ5SJZLES4` |
 | `NEXT_PUBLIC_DERIV_SHOW_APP_NAME` | `true` |
 
-*(Note: cPanel Passenger automatically injects `PORT` for the application, so you do not need to hardcode a specific port).*
+*(Note: cPanel Passenger automatically injects `PORT` for the application, so you do not need to hardcode a specific port.)*
+
+The OAuth callback is the app's root route (`/`), not `/callback` or `/api/deriv/token`. The `/api/deriv/token` route is only the server-side code exchange endpoint. Register the exact deployed root URL (for this Vercel deployment, `https://v1-0-65.vercel.app`) in the Deriv OAuth application settings. The OAuth client ID is separate from the legacy Deriv app ID shown above. Set `NEXT_PUBLIC_DERIV_OAUTH_CLIENT_ID` and `NEXT_PUBLIC_DERIV_REDIRECT_URI` in Vercel's Production environment before deploying; the redirect URI must exactly match the registered URL, including whether it has a trailing slash.
 
 4. Click **Create** (or **Save**).
 
