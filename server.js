@@ -281,6 +281,8 @@ var DERIV_APP_ID = process.env.NEXT_PUBLIC_DERIV_APP_ID || process.env.VITE_DERI
 var DERIV_ENV = process.env.NEXT_PUBLIC_DERIV_ENV || "production";
 var DERIV_OAUTH_URL = DERIV_ENV === "staging" ? "https://staging-oauth.deriv.com" : "https://auth.deriv.com";
 var DERIV_API_URL = DERIV_ENV === "staging" ? "https://staging-api.deriv.com" : "https://api.derivws.com";
+var DERIV_OAUTH_CLIENT_ID = process.env.NEXT_PUBLIC_DERIV_OAUTH_CLIENT_ID;
+var DERIV_REDIRECT_URI = process.env.NEXT_PUBLIC_DERIV_REDIRECT_URI;
 app.prepare().then(() => {
   const server = express();
   server.use(express.json());
@@ -299,14 +301,19 @@ app.prepare().then(() => {
       if (!code || !code_verifier) {
         return res.status(400).json({ error: "Missing code or code_verifier" });
       }
-      if (!client_id || !redirect_uri) {
-        return res.status(400).json({ error: "Missing client_id or redirect_uri" });
+      if (!DERIV_OAUTH_CLIENT_ID || !DERIV_REDIRECT_URI) {
+        return res.status(503).json({
+          error: "Deriv OAuth is not configured. Set NEXT_PUBLIC_DERIV_OAUTH_CLIENT_ID and NEXT_PUBLIC_DERIV_REDIRECT_URI."
+        });
+      }
+      if (client_id !== DERIV_OAUTH_CLIENT_ID || redirect_uri !== DERIV_REDIRECT_URI) {
+        return res.status(400).json({ error: "OAuth client or redirect URI does not match the server configuration." });
       }
       const params = new URLSearchParams();
       params.set("grant_type", "authorization_code");
-      params.set("client_id", client_id);
+      params.set("client_id", DERIV_OAUTH_CLIENT_ID);
       params.set("code", code);
-      params.set("redirect_uri", redirect_uri);
+      params.set("redirect_uri", DERIV_REDIRECT_URI);
       params.set("code_verifier", code_verifier);
       const response = await fetch(`${DERIV_OAUTH_URL}/oauth2/token`, {
         method: "POST",
