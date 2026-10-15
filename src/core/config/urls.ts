@@ -4,6 +4,7 @@
 
 export interface DerivConfig {
   appId: string;
+  oauthClientId: string;
   redirectUri: string;
   appName: string;
   showAppName: boolean;
@@ -14,6 +15,7 @@ export interface DerivConfig {
 
 const publicEnv = {
   DERIV_APP_ID: process.env.NEXT_PUBLIC_DERIV_APP_ID,
+  DERIV_OAUTH_CLIENT_ID: process.env.NEXT_PUBLIC_DERIV_OAUTH_CLIENT_ID,
   DERIV_REDIRECT_URI: process.env.NEXT_PUBLIC_DERIV_REDIRECT_URI,
   DERIV_APP_NAME: process.env.NEXT_PUBLIC_DERIV_APP_NAME,
   DERIV_SHOW_APP_NAME: process.env.NEXT_PUBLIC_DERIV_SHOW_APP_NAME,
@@ -39,6 +41,7 @@ const getDefaultRedirectUri = (): string => {
 
 export const DERIV_CONFIG: DerivConfig = {
   appId: getEnvVar('DERIV_APP_ID', '33E1sj7WNaMsjg5MAxPyS'),
+  oauthClientId: getEnvVar('DERIV_OAUTH_CLIENT_ID'),
   redirectUri: getDefaultRedirectUri(),
   appName: getEnvVar('DERIV_APP_NAME', 'G-Squad'),
   showAppName: getEnvVar('DERIV_SHOW_APP_NAME', 'true') === 'true',
@@ -49,8 +52,8 @@ export const DERIV_CONFIG: DerivConfig = {
 
 export const DERIV_ENDPOINTS = {
   production: {
-    oauth: 'https://oauth.deriv.com',
-    api: 'https://api.deriv.com',
+    oauth: 'https://auth.deriv.com',
+    api: 'https://api.derivws.com',
     ws: 'wss://ws.derivws.com/websockets/v3',
   },
   staging: {

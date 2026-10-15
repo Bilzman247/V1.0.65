@@ -279,8 +279,8 @@ var PORT = Number(process.env.PORT) || 3e3;
 var HOST = "0.0.0.0";
 var DERIV_APP_ID = process.env.NEXT_PUBLIC_DERIV_APP_ID || process.env.VITE_DERIV_APP_ID || "33E1sj7WNaMsjg5MAxPyS";
 var DERIV_ENV = process.env.NEXT_PUBLIC_DERIV_ENV || "production";
-var DERIV_OAUTH_URL = DERIV_ENV === "staging" ? "https://staging-oauth.deriv.com" : "https://oauth.deriv.com";
-var DERIV_API_URL = DERIV_ENV === "staging" ? "https://staging-api.deriv.com" : "https://api.deriv.com";
+var DERIV_OAUTH_URL = DERIV_ENV === "staging" ? "https://staging-oauth.deriv.com" : "https://auth.deriv.com";
+var DERIV_API_URL = DERIV_ENV === "staging" ? "https://staging-api.deriv.com" : "https://api.derivws.com";
 app.prepare().then(() => {
   const server = express();
   server.use(express.json());

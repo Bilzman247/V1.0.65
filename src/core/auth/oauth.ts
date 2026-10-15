@@ -19,7 +19,11 @@ export interface OAuthLoginOptions {
 export async function initiateLogin(options: OAuthLoginOptions = {}): Promise<void> {
   if (typeof window === 'undefined') return;
 
-  const clientId = options.clientId || DERIV_CONFIG.appId;
+  const clientId = options.clientId || DERIV_CONFIG.oauthClientId;
+  if (!clientId) {
+    throw new Error('Deriv OAuth client is not configured. Set NEXT_PUBLIC_DERIV_OAUTH_CLIENT_ID to your registered Deriv OAuth client ID.');
+  }
+
   const redirectUri = options.redirectUri || DERIV_CONFIG.redirectUri;
   const scopes = (options.scopes || DERIV_CONFIG.oauthScopes).replace(/,/g, ' ');
   const endpoints = getEndpoints(options.env || DERIV_CONFIG.env);
@@ -33,19 +37,15 @@ export async function initiateLogin(options: OAuthLoginOptions = {}): Promise<vo
   storage.savePKCE(codeVerifier, state, redirectUri);
 
   // Construct Deriv OAuth 2.0 authorization URL
-  const authUrl = new URL(`${endpoints.oauth}/oauth2/authorize`);
+  const authUrl = new URL(`${endpoints.oauth}/oauth2/auth`);
   authUrl.searchParams.set('response_type', 'code');
   authUrl.searchParams.set('client_id', clientId);
+  authUrl.searchParams.set('app_id', DERIV_CONFIG.appId);
   authUrl.searchParams.set('redirect_uri', redirectUri);
   authUrl.searchParams.set('scope', scopes);
   authUrl.searchParams.set('code_challenge', codeChallenge);
   authUrl.searchParams.set('code_challenge_method', 'S256');
   authUrl.searchParams.set('state', state);
-
-  // Deriv branding & app display flags
-  if (DERIV_CONFIG.showAppName && DERIV_CONFIG.appName) {
-    authUrl.searchParams.set('brand', 'deriv');
-  }
 
   // Redirect to Deriv authorization
   window.location.href = authUrl.toString();
@@ -84,7 +84,11 @@ export async function handleOAuthCallback(
     throw new Error('Missing PKCE code verifier in session storage. Please retry login.');
   }
 
-  const clientId = options.clientId || DERIV_CONFIG.appId;
+  const clientId = options.clientId || DERIV_CONFIG.oauthClientId;
+  if (!clientId) {
+    throw new Error('Deriv OAuth client is not configured. Set NEXT_PUBLIC_DERIV_OAUTH_CLIENT_ID to your registered Deriv OAuth client ID.');
+  }
+
   const redirectUri = options.redirectUri || storage.getPKCERedirectUri() || DERIV_CONFIG.redirectUri;
 
   const proxyRes = await fetch('/api/deriv/token', {
@@ -134,7 +138,7 @@ export async function handleOAuthCallback(
  */
 export async function refreshAccessToken(
   refreshToken: string,
-  clientId: string = DERIV_CONFIG.appId,
+  clientId: string = DERIV_CONFIG.oauthClientId,
   env: 'production' | 'staging' = DERIV_CONFIG.env
 ): Promise<AuthInfo> {
   const endpoints = getEndpoints(env);

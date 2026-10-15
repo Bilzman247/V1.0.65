@@ -55,6 +55,7 @@ This guide explains how to deploy **G-Squad** to Truehost cPanel shared hosting 
 |---|---|
 | `NODE_ENV` | `production` |
 | `NEXT_PUBLIC_DERIV_APP_ID` | `33E1sj7WNaMsjg5MAxPyS` |
+| `NEXT_PUBLIC_DERIV_OAUTH_CLIENT_ID` | Your registered OAuth 2.0 client ID from Deriv |
 | `NEXT_PUBLIC_DERIV_APP_NAME` | `G-Squad` |
 | `NEXT_PUBLIC_DERIV_ENV` | `production` |
 | `NEXT_PUBLIC_DERIV_OAUTH_SCOPES` | `trade,account_manage` |
@@ -63,6 +64,8 @@ This guide explains how to deploy **G-Squad** to Truehost cPanel shared hosting 
 | `NEXT_PUBLIC_DERIV_SHOW_APP_NAME` | `true` |
 
 *(Note: cPanel Passenger automatically injects `PORT` for the application, so you do not need to hardcode a specific port).*
+
+Register the exact deployed callback URL (for example, `https://g-squad.buzz`) in the Deriv OAuth application settings. The OAuth client ID is separate from the legacy Deriv app ID shown above. On Vercel, set `NEXT_PUBLIC_DERIV_OAUTH_CLIENT_ID` and `NEXT_PUBLIC_DERIV_REDIRECT_URI` in the project environment before deploying; the redirect URI must exactly match the one registered with Deriv.
 
 4. Click **Create** (or **Save**).
 

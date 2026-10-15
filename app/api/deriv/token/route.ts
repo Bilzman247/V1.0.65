@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 
 const DERIV_ENV = process.env.NEXT_PUBLIC_DERIV_ENV || 'production';
-const DERIV_OAUTH_URL = DERIV_ENV === 'staging' ? 'https://staging-oauth.deriv.com' : 'https://oauth.deriv.com';
+const DERIV_OAUTH_URL = DERIV_ENV === 'staging' ? 'https://staging-oauth.deriv.com' : 'https://auth.deriv.com';
 
 export async function POST(req: Request) {
   try {
